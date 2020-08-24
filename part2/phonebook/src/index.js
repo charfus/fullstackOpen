@@ -81,17 +81,27 @@ const App = () => {
   }
 
   const submitHandler = (e) => {
-    e.preventDefault();    
+    e.preventDefault();
+    const newPerson = {
+      name : newName,
+      number : newNumber,
+      id : persons.slice(-1)[0].id + 1      
+    }
     if(persons.some(el => el.name === newName)){
-      window.alert(`${newName} exists already `) 
-    } else {      
-      const newPerson = {
-        name : newName,
-        number : newNumber,
-        id : persons.slice(-1)[0].id + 1      
-    }    
-    postPerson(newPerson)
-    setPersons([...persons, newPerson])      
+      
+      let oldPerson = persons.filter(el => el.name === newName);
+      let index = persons.indexOf(oldPerson[0]);
+      let opsId = oldPerson[0].id;      
+      persons.splice(index, 1, newPerson); //        
+      personService.update(opsId, newPerson)
+      .then(res => console.log('done with', res));
+      console.log('after splicing', persons)
+      setPersons([...persons])
+      // [...persons]랑 persons랑 차이
+      
+    } else {
+      postPerson(newPerson)
+      setPersons([...persons, newPerson])      
     }
   }
 
