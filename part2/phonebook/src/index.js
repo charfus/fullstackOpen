@@ -66,10 +66,14 @@ const App = () => {
 
   const deleteHandler = (e) => {
     e.preventDefault();    
-    let num = e.target.id;
-    let beDeleted = persons.filter( el => el.id !== +num)
-    setPersons(beDeleted)    
-    personService.delNum(num).then(res => console.log('deleted!'))
+    let num = e.target.id;    
+    let deleted = persons.filter(el => el.id === +num) // 삭제할 요소     
+    if(window.confirm(`Delete ${deleted[0].name}?`)){
+      let index = persons.indexOf(deleted[0])  
+      persons.splice(index, 1)
+      setPersons([...persons])    
+      personService.delNum(num).then(res => console.log('deleted!'))
+    }
   }
   
   const nameHandler = (e) => {    
@@ -88,7 +92,7 @@ const App = () => {
       id : persons.slice(-1)[0].id + 1      
     }
     if(persons.some(el => el.name === newName)){
-      
+      if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
       let oldPerson = persons.filter(el => el.name === newName);
       let index = persons.indexOf(oldPerson[0]);
       let opsId = oldPerson[0].id;      
@@ -98,7 +102,7 @@ const App = () => {
       console.log('after splicing', persons)
       setPersons([...persons])
       // [...persons]랑 persons랑 차이
-      
+      }      
     } else {
       postPerson(newPerson)
       setPersons([...persons, newPerson])      
