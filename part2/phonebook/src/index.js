@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom'
+import './index.css'
 import personService from './services/persons'
 
-const postPerson = (person) => {
-  personService.create(person)
-  .then(res => {console.log('after postin', res)})
+const Notification = ({  message }) => {
+  if(message === null){
+    return null
+  }
+
+  return(
+    <div className="error">
+      {message}
+    </div>
+  )
 }
+
 
 const Filter = ({ filter, setFiltered }) => {  
   return(
@@ -63,6 +72,7 @@ const App = () => {
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')  
   const [ filtered, setFiltered ] = useState('')
+  const [ errorMessage, setErrorMessage] = useState(null)
 
   const deleteHandler = (e) => {
     e.preventDefault();    
@@ -72,7 +82,18 @@ const App = () => {
       let index = persons.indexOf(deleted[0])  
       persons.splice(index, 1)
       setPersons([...persons])    
-      personService.delNum(num).then(res => console.log('deleted!'))
+      personService.delNum(num)
+      .then(res => {
+        setErrorMessage(`${deleted[0].name} deleted`)
+        setTimeout(()=>{
+        setErrorMessage(null)
+      }, 5000)})
+      .catch(err => {
+        setErrorMessage(`Information of ${deleted[0].name} has already been removed from server`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        }, 5000)
+      })
     }
   }
   
@@ -86,11 +107,13 @@ const App = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
+        
     const newPerson = {
       name : newName,
       number : newNumber,
       id : persons.slice(-1)[0].id + 1      
     }
+
     if(persons.some(el => el.name === newName)){
       if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)){
       let oldPerson = persons.filter(el => el.name === newName);
@@ -98,13 +121,36 @@ const App = () => {
       let opsId = oldPerson[0].id;      
       persons.splice(index, 1, newPerson); //        
       personService.update(opsId, newPerson)
-      .then(res => console.log('done with', res));
+      .then(res => {
+        setErrorMessage(`${newPerson.name}'s number is changed`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        }, 5000)
+      })
+      .catch(err => {
+        setErrorMessage(`Information of ${newPerson.name} has already been removed from server`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        }, 5000)
+      })
       console.log('after splicing', persons)
       setPersons([...persons])
       // [...persons]랑 persons랑 차이
       }      
     } else {
-      postPerson(newPerson)
+      personService.create(newPerson)
+      .then(res => {        
+        setErrorMessage(`added ${newPerson.name}`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        }, 5000)
+      })
+      .catch(err => {
+        setErrorMessage(`problem with submitting`)
+        setTimeout(()=>{
+          setErrorMessage(null)
+        }, 5000)
+      })
       setPersons([...persons, newPerson])      
     }
   }
@@ -114,11 +160,18 @@ const App = () => {
     .then(data => {
       setPersons(data)
     })
+    .catch(err => {
+      setErrorMessage(`loaded error`)
+      setTimeout(()=>{
+        setErrorMessage(null)
+      }, 5000)
+    })
   },[])
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <h1>Phonebook</h1>
+      <Notification message={errorMessage}/>
       <Filter filtered={filtered} setFiltered={setFiltered}/>
       <h2>add a new</h2>
       <PersonForm 
